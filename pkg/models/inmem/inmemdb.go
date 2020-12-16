@@ -110,8 +110,9 @@ func (mem *InMemoryDB) Alive() (map[string]string, error) {
 // currently accepted new connections
 func (mem *InMemoryDB) Ready() (map[string]string, error) {
 	return map[string]string{
-		"health": "alive",
-		"ready":  "true",
-		"items":  fmt.Sprintf("%d", mem.db.Len()),
+		"health":  "alive",
+		"ready":   "true",
+		"items":   fmt.Sprintf("%d", mem.db.Len()),
+		"message": fmt.Sprintf("up; %d active objects", mem.db.Len()),
 	}, nil
 }

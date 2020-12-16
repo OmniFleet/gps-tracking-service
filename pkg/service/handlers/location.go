@@ -63,6 +63,8 @@ func renderJSON(w http.ResponseWriter, status int, data interface{}) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
 	w.WriteHeader(status)
 	if _, err = w.Write(response); err != nil {
 		renderError(w, http.StatusInternalServerError, err)

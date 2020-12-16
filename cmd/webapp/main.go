@@ -22,12 +22,13 @@ func main() {
 
 	addr := flag.String("addr", ":5000", "HTTP network address")
 	datastore := flag.String("datastore", "inmemdb", "backend datastore to use")
-	ttl := flag.Duration("Object TTL", 60*time.Second, "TTL of Object Telemetry")
+	ttl := flag.Duration("object-ttl", 60*time.Second, "TTL of Object Telemetry")
+
 	flag.Parse()
 
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	zerolog.TimeFieldFormat = time.RFC1123Z
 	zerolog.DurationFieldUnit = time.Second
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC1123})
+	//	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC1123})
 
 	var db models.TelemetryReaderWriterChecker
 

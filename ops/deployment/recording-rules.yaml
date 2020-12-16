@@ -1,0 +1,44 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: gps-tracking-service.rules
+  namespace: omnifleet
+  labels:
+    app: gps-tracking-service
+    prometheus: omnifleet-prometheus
+spec:
+  groups:
+    - name: gps-tracking-service.alerts
+      rules:
+        - alert: Out of SLO
+          expr: slo:gps_tracking_service:service < 1.0
+          for: 30s
+          labels:
+            severity: critical
+          annotations:
+            title: GPS Tracking Service outside of SLO
+            description: the service is broken
+    - name: gps-tracking-service.rules
+      rules:
+        - expr: sum(rate(http_request_duration_seconds_counts{status=~"5.."}[5m]) or vector(0)) / sum(rate(http_request_duration_seconds_count[5m]) or vector(0))
+          record: "sli:gps_tracking_service:error:rate5m"
+        - expr: sum(rate(http_request_duration_seconds_counts{status=~"5.."}[7d]) or vector(0)) / sum(rate(http_request_duration_seconds_count[7d]) or vector(0))
+          record: "sli:gps_tracking_service:error:rate7d"
+        - expr: sum(increase(http_request_duration_seconds_count[1m]))
+          record: "sli:gps_tracking_service:rps:rate1m"
+        - expr: sum(increase(http_request_duration_seconds_count[5m]))
+          record: "sli:gps_tracking_service:rps:rate5m"
+        - expr: max(http_request_duration_seconds{quantile="0.75"})
+          record: "sli:gps_tracking_service:quantile:75"
+        - expr: max(http_request_duration_seconds{quantile="0.95"})
+          record: "sli:gps_tracking_service:quantile:95"
+        - expr: max(http_request_duration_seconds{quantile="0.99"})
+          record: "sli:gps_tracking_service:quantile:99"
+        - expr: sli:gps_tracking_service:error:rate7d < bool 0.1
+          record: "slo:gps_tracking_service:error:rate"
+        - expr: sli:gps_tracking_service:quantile:99 < bool 0.5
+          record: "slo:gps_tracking_service:duration"
+        - expr: slo:gps_tracking_service:error:rate * slo:gps_tracking_service:duration
+          record: "slo:gps_tracking_service:service"
+        - expr: 1 - ((1 - slo:gps_tracking_service:service) / (1 - 0.80))
+          record: "slo:gps_tracking_service:error_budget"

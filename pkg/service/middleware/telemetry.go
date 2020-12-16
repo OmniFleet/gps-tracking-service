@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -15,7 +16,7 @@ var (
 			Help:       "HTTP request duration summary",
 			Objectives: map[float64]float64{0.5: 0.05, 0.75: 0.05, 0.95: 0.05, 0.99: 0.05},
 		},
-		[]string{"handler", "method", "status"},
+		[]string{"handler", "verb", "status"},
 	)
 
 	RequestErrors = prometheus.NewCounterVec(
@@ -23,7 +24,7 @@ var (
 			Name: "http_request_errors_total",
 			Help: "total number of valid HTTP requests that could not be served",
 		},
-		[]string{"handler", "method", "status"},
+		[]string{"handler", "verb", "status"},
 	)
 
 	RequestSize = prometheus.NewSummary(
@@ -56,11 +57,12 @@ func PrometheusTelemetry(next http.Handler) http.Handler {
 		ww := mw.NewWrapResponseWriter(w, r.ProtoMajor)
 		next.ServeHTTP(ww, r)
 		duration := time.Since(start)
-		RequestDuration.WithLabelValues(r.URL.Path, r.Method, http.StatusText(ww.Status())).Observe((duration.Seconds()))
+		status := fmt.Sprintf("%d", ww.Status())
+		RequestDuration.WithLabelValues(r.URL.Path, r.Method, status).Observe((duration.Seconds()))
 		RequestSize.Observe(float64(r.ContentLength))
 		ResponseSize.Observe(float64(ww.BytesWritten()))
 		if ww.Status() >= 500 {
-			RequestErrors.WithLabelValues(r.URL.Path, r.Method, http.StatusText(ww.Status())).Inc()
+			RequestErrors.WithLabelValues(r.URL.Path, r.Method, status).Inc()
 		}
 	}
 	return http.HandlerFunc(fn)

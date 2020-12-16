@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gps-tracking-service
+spec:
+  selector:
+    matchLabels:
+      app: gps-tracking-service
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: gps-tracking-service
+    spec:
+      containers:
+        - name: gps-tracking-service
+          image: scbunn/omnifleet-gps-tracker:v1.0.0
+          imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gps-tracking-service
+  labels:
+    app: gps-tracking-service
+spec:
+  selector:
+    app: gps-tracking-service
+  ports:
+    - name: web
+      port: 5000
+  type: ClusterIP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: gps-tracking-service
+    env: dev
+  name: gps-tracking-service-monitor
+  namespace: omnifleet
+spec:
+  endpoints:
+    - port: web
+  jobLabel: gps-metrics-tracking
+  namespaceSelector:
+    matchNames:
+      - omnifleet
+  selector:
+    matchLabels:
+      app: gps-tracking-service

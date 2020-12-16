@@ -13,6 +13,7 @@ import (
 	"scbunn.org/tmp/gps-tracking-service/pkg/service/middleware"
 )
 
+// Routes configures Chi Routing to HTTP Handlers
 func (s *Service) Routes() http.Handler {
 	// configure a sampled logger for our routes
 	sampledLogger := s.logger.Sample(&zerolog.BurstSampler{
@@ -33,7 +34,8 @@ func (s *Service) Routes() http.Handler {
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: false,
+		AllowCredentials: true,
+		Debug:            true,
 		MaxAge:           300,
 	}))
 	r.Use(middleware.SecurityHeaders)
@@ -47,9 +49,9 @@ func (s *Service) Routes() http.Handler {
 	})
 
 	r.Route("/api/v1", func(r chi.Router) {
-		r.Get("/location/{id}", handlers.GetLocation(s.telemetry))
-		r.Post("/location/", handlers.UpdateLocation(s.telemetry))
 		r.Get("/location/", handlers.GetAllLocations(s.telemetry))
+		r.Post("/location/", handlers.UpdateLocation(s.telemetry))
+		r.Get("/location/{id}", handlers.GetLocation(s.telemetry))
 	})
 
 	return r
