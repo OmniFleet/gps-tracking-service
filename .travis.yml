@@ -1,0 +1,9 @@
+language: go
+
+go_import_path: scbunn.org/tmp/gps-tracking-service
+
+go:
+  - 1.15
+  - master
+
+script: go test -cover -race -v ./...
